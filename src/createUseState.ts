@@ -4,7 +4,7 @@ import { useStableSelector, useStateHookAPI } from "./commonHooks";
 /**
  * Create Use State
  *
- * A reuseable `State` consumer/creator for your react components.
+ * A reuseable `State` consumer/creator for your preact components.
  * This hook can accept an exising instance of `State` and return
  * a hook for deriving reactive state and updaters fn's for your components
  *

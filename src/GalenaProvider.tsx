@@ -21,7 +21,7 @@ import type { PropsWithChildren } from "preact/compat";
  * ```
  *
  * By wrapping your application in the `GalenaProvider` returned, you
- * can access your instance anywhere in your react code by calling
+ * can access your instance anywhere in your preact code by calling
  * `useGalena()`
  */
 export function createGalenaProvider<T extends Galena<any>>(galena: T) {
@@ -30,7 +30,7 @@ export function createGalenaProvider<T extends Galena<any>>(galena: T) {
    * Galena Provider
    *
    * A context provider for your `Galena` instance to work with
-   * React dependency injection
+   * Preact dependency injection
    */
   function GalenaProvider({ children }: PropsWithChildren) {
     return (

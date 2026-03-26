@@ -5,7 +5,7 @@ import { useStableSelector, useStateHookAPI } from "./commonHooks";
 /**
  * Use State
  *
- * A `State` consumer/creator for your react components.
+ * A `State` consumer/creator for your preact components.
  * This hook can accept an exising instance of `State` or
  * a stateful value and return reactive state and updaters
  * for your components
@@ -17,7 +17,7 @@ import { useStableSelector, useStateHookAPI } from "./commonHooks";
  *
  * export const MyComponent = () => {
  *   const [state, setState] = useState(myState);
- *   // or useState can be used a standalone replacement for React's useState
+ *   // or useState can be used a standalone replacement for Preact's useState
  *   const [state, setState] = useState("<some-value>");
  *
  *   return (
