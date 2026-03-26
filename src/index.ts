@@ -1,5 +1,6 @@
-export { connect } from "./connect";
-export { connectMulti } from "./connectMulti";
-export { createUseState } from "./createUseState";
-export { createUseMutation } from "./createUseMutation";
-export type { ReactiveStates } from "./connectMulti";
+export * from "./connect";
+export * from "./connect-multi";
+export * from "./createUseState";
+export * from "./GalenaProvider";
+export * from "./types";
+export * from "./useState";

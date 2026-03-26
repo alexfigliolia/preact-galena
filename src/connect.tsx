@@ -1,113 +1,62 @@
 import { Component, type ComponentType } from "preact";
+import type { State } from "@figliolia/galena";
+import type { Subtract } from "./types";
 
-import type { ReactiveInterface, Subtract } from "./types";
-import { subscribe, unsubscribe } from "./extractAPI";
-
-/**
- * ### Connect
- *
- * A factory for generating Higher Order Components from `Galena`
- * instances and/or units of `State`. `connect()` provides an
- * API for Preact Components to select state values and receive
- * them as props
- *
- * ### Composing State and HOC's
- *
- * ```typescript
- * // AppState.ts
- * import { Galena } from "@figliolia/galena";
- * import { connect } from "@figliolia/preact-galena";
- *
- * const AppState = new Galena();
- *
- * const NavigationState = AppState.composeState("navigation", {
- *   route: "/",
- *   permittedRoutes: "/**"
- * });
- *
- * export const connectAppState = connect(AppState);
- * // or using your Navigation Unit
- * export const connectNavigation = connect(NavigationState);
- * ```
- *
- * ### Using Your Connected HOC's
- * ```tsx
- * import { connectAppState, connectNavigation } from "./AppState";
- *
- * const MyComponent = ({ route }) => {
- *   return (
- *     <div>The current route is {route}</div>
- *   );
- * }
- *
- * export default connectAppState(({ navigation }) => ({
- *   route: navigation.state.route
- * }))(MyComponent);
- *
- * // Or using your `connectNavigation()` method
- * export default connectNavigation((state) => ({
- *   route: state.route
- * }))(MyComponent);
- * ```
- */
-export const connect = <StateInstance extends ReactiveInterface>(
+export const connect = <StateInstance extends State<any>>(
   state: StateInstance
 ) => {
+  type ScopedState = ReturnType<StateInstance["getSnapshot"]>;
   return <
     SelectorFunction extends (
-      state: StateInstance["state"],
+      state: ScopedState,
       ownProps: any
     ) => Record<string, any>
   >(
     selection: SelectorFunction
   ) => {
-    return <ComponentProps extends ReturnType<SelectorFunction>>(
+    type Selection = ReturnType<SelectorFunction>;
+    return <ComponentProps extends Selection>(
       WrappedComponent: ComponentType<ComponentProps>
-    ): ComponentType<
-      Subtract<ComponentProps, ReturnType<SelectorFunction>>
-    > => {
-      type OwnProps = Subtract<ComponentProps, ReturnType<SelectorFunction>>;
-      return class GalenaComponent extends Component<
-        OwnProps,
-        ReturnType<SelectorFunction>
-      > {
-        state: any;
-        private listener: string | null = null;
+    ): ComponentType<Subtract<ComponentProps, Selection>> => {
+      type OwnProps = Subtract<ComponentProps, Selection>;
+      return class GalenaComponent extends Component<OwnProps, Selection> {
+        override state: any;
+        private listener: (() => void) | null = null;
         constructor(props: OwnProps) {
           super(props);
           this.update = this.update.bind(this);
-          this.state = selection(state.state, this.props);
+          this.state = selection(state.getSnapshot(), this.props);
         }
 
         static displayName = `GalenaComponent(${
-          WrappedComponent.displayName || WrappedComponent.name || "Component"
+          (WrappedComponent.displayName ?? WrappedComponent.name) || "Component"
         })`;
 
         public override componentDidMount() {
-          this.listener = subscribe(state)(this.update);
+          this.listener = state.subscribe((state) => this.update(state));
         }
 
         public override componentWillReceiveProps(nextProps: OwnProps) {
           if (nextProps !== this.props) {
-            this.update(state.state, nextProps);
+            this.update(state.getSnapshot(), nextProps);
           }
         }
 
-        public override shouldComponentUpdate(_: OwnProps, nextState: any) {
-          return nextState !== this.state;
+        public override shouldComponentUpdate(
+          nextProps: OwnProps,
+          nextState: Selection
+        ) {
+          return nextState !== this.state || nextProps !== this.props;
         }
 
         public override componentWillUnmount() {
           if (this.listener) {
-            unsubscribe(state)(this.listener);
+            this.listener();
             this.listener = null;
           }
         }
 
-        private update(
-          nextState: StateInstance["state"],
-          ownProps = this.props
-        ) {
+        private update(nextState: ScopedState, ownProps = this.props) {
           this.setState(selection(nextState, ownProps));
         }
 
